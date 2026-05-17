@@ -1,0 +1,3 @@
+'use client';
+import { useRouter } from 'next/navigation';
+export default function AdminActions(){ const router=useRouter(); async function runEscalation(){ const r=await fetch('/api/admin/escalations',{method:'POST'}); const j=await r.json(); alert(`Escalations created: ${j.created?.length||0}`); router.refresh(); } return <div className="card mt-6 flex flex-wrap gap-3"><button onClick={runEscalation} className="btn-primary">Run Escalation Engine</button><a className="btn-muted" href="/api/reports/export?format=csv">Download CSV</a><a className="btn-muted" href="/api/reports/export?format=xlsx">Download Excel</a></div> }

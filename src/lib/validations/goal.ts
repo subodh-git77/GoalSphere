@@ -1,0 +1,4 @@
+import { z } from 'zod';
+export const goalSchema = z.object({ thrustArea:z.string().min(2), title:z.string().min(3), description:z.string().optional(), uomType:z.enum(['NUMERIC_MIN','NUMERIC_MAX','PERCENTAGE','TIMELINE','ZERO_BASED']), targetValue:z.string().min(1), weightage:z.coerce.number().int().min(10).max(100) });
+export const checkinSchema = z.object({ goalId:z.string(), quarter:z.enum(['Q1','Q2','Q3','Q4']), actualAchievement:z.string().min(1), status:z.enum(['NOT_STARTED','ON_TRACK','COMPLETED']), employeeComment:z.string().optional(), managerComment:z.string().optional() });
+export function validateGoalSet(goals:{weightage:number}[]){ if(goals.length>8) return 'Maximum 8 goals allowed'; if(goals.some(g=>g.weightage<10)) return 'Minimum 10% weightage per goal required'; const total=goals.reduce((s,g)=>s+Number(g.weightage),0); if(total!==100) return 'Total weightage must equal exactly 100%'; return null; }

@@ -1,0 +1,3 @@
+import { prisma } from '@/lib/prisma'; import { ok, requireRole } from '@/lib/api-helpers';
+export async function GET(){ const r=await requireRole(['ADMIN','MANAGER','EMPLOYEE']); if(r.error) return r.error; return ok(await prisma.goalCycle.findMany({orderBy:{startDate:'asc'}})); }
+export async function POST(req:Request){ const r=await requireRole(['ADMIN']); if(r.error) return r.error; const b=await req.json(); if(b.isActive) await prisma.goalCycle.updateMany({data:{isActive:false}}); return ok(await prisma.goalCycle.create({data:{...b,startDate:new Date(b.startDate),endDate:new Date(b.endDate)}}),201); }

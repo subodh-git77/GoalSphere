@@ -1,0 +1,2 @@
+import AppShell from '@/components/AppShell';
+export default function Reports(){ return <AppShell><h1 className="text-3xl font-black">Reports</h1><p className="mb-6 text-slate-500">Export achievement reports in CSV or Excel format.</p><div className="card flex gap-4"><a className="btn-primary" href="/api/reports/export?format=xlsx">Export Excel</a><a className="btn-muted" href="/api/reports/export?format=csv">Export CSV</a></div></AppShell> }

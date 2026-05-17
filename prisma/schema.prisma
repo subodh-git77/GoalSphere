@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+enum UomType {
+  NUMERIC_MIN
+  NUMERIC_MAX
+  PERCENTAGE
+  TIMELINE
+  ZERO_BASED
+}
+
+enum GoalStatus {
+  NOT_STARTED
+  ON_TRACK
+  COMPLETED
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  RETURNED
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RETURNED
+}
+
+enum Quarter {
+  Q1
+  Q2
+  Q3
+  Q4
+}
+
+enum EscalationStatus {
+  OPEN
+  RESOLVED
+}
+
+enum CyclePhase {
+  GOAL_SETTING
+  Q1
+  Q2
+  Q3
+  Q4_ANNUAL
+  CLOSED
+}
+
+model User {
+  id          String  @id @default(cuid())
+  employeeId  String  @unique
+  name        String
+  email       String  @unique
+  password    String
+  role        Role    @default(EMPLOYEE)
+  department  String
+  designation String
+  managerId   String?
+  manager     User?   @relation("ManagerEmployees", fields: [managerId], references: [id])
+  employees   User[]  @relation("ManagerEmployees")
+  isActive    Boolean @default(true)
+
+  goals            Goal[]         @relation("UserGoals")
+  createdGoals     Goal[]         @relation("GoalCreator")
+  ownedSharedGoals SharedGoal[]   @relation("SharedGoalOwner")
+  auditLogs        AuditLog[]     @relation("AuditActor")
+  escalations      Escalation[]
+  notifications    Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role, department])
+  @@index([managerId])
+}
+
+model GoalCycle {
+  id        String     @id @default(cuid())
+  name      String
+  phase     CyclePhase
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean    @default(false)
+  createdAt DateTime   @default(now())
+}
+
+model Goal {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation("UserGoals", fields: [userId], references: [id], onDelete: Cascade)
+
+  thrustArea  String
+  title       String
+  description String?
+
+  uomType     UomType
+  targetValue String
+  actualValue String?
+
+  weightage Int
+
+  status           GoalStatus       @default(NOT_STARTED)
+  submissionStatus SubmissionStatus @default(DRAFT)
+  approvalStatus   ApprovalStatus   @default(PENDING)
+
+  locked Boolean @default(false)
+
+  sharedGoalId String?
+  sharedGoal   SharedGoal? @relation(fields: [sharedGoalId], references: [id])
+
+  createdBy String
+  creator   User   @relation("GoalCreator", fields: [createdBy], references: [id])
+
+  checkins QuarterlyCheckin[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, submissionStatus, approvalStatus])
+  @@index([approvalStatus, submissionStatus])
+  @@index([locked, updatedAt])
+  @@index([updatedAt])
+  @@index([sharedGoalId])
+}
+
+model SharedGoal {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  targetValue String
+  thrustArea  String
+
+  ownerId String
+  owner   User   @relation("SharedGoalOwner", fields: [ownerId], references: [id])
+
+  goals Goal[]
+
+  createdAt DateTime @default(now())
+}
+
+model QuarterlyCheckin {
+  id String @id @default(cuid())
+
+  goalId String
+  goal   Goal   @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  quarter Quarter
+
+  plannedTarget     String
+  actualAchievement String
+
+  status        GoalStatus
+  progressScore Float
+
+  employeeComment String?
+  managerComment  String?
+
+  checkinDate DateTime @default(now())
+
+  @@unique([goalId, quarter])
+  @@index([quarter])
+  @@index([goalId, checkinDate])
+}
+
+model AuditLog {
+  id String @id @default(cuid())
+
+  entityType String
+  entityId   String
+  action     String
+
+  oldValue Json?
+  newValue Json?
+
+  changedBy String
+  actor     User   @relation("AuditActor", fields: [changedBy], references: [id])
+
+  timestamp DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([timestamp])
+  @@index([changedBy, timestamp])
+}
+
+model Escalation {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  escalationType String
+
+  status EscalationStatus @default(OPEN)
+
+  triggeredAt DateTime  @default(now())
+  resolvedAt  DateTime?
+
+  @@index([userId, status])
+  @@index([triggeredAt])
+}
+
+model Notification {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title   String
+  message String
+
+  read Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([createdAt])
+}

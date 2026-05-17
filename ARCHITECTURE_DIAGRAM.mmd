@@ -1,0 +1,21 @@
+flowchart LR
+  A[Employee / Manager / Admin] --> B[Next.js 14 Frontend]
+  B --> C[NextAuth Credentials Auth]
+  B --> D[Protected App Routes]
+  D --> E[REST API Route Handlers]
+  E --> F[RBAC Middleware]
+  F --> G[Goal Service]
+  F --> H[Approval Service]
+  F --> I[Check-in Service]
+  F --> J[Report Service]
+  F --> K[Audit Service]
+  G --> L[Prisma ORM]
+  H --> L
+  I --> L
+  J --> L
+  K --> L
+  L --> M[(PostgreSQL)]
+  J --> N[CSV / Excel Export]
+  O[Cron / Scheduled Jobs] --> P[Escalation Engine]
+  P --> Q[Notifications]
+  Q --> R[Email / Teams Extension]
