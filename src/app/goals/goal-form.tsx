@@ -5,19 +5,60 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { goalSchema } from '@/lib/validations/goal';
 import { useRouter } from 'next/navigation';
 import { Loader2, Save } from 'lucide-react';
+import { z } from 'zod';
 
-export default function GoalForm({ currentTotal, disabled = false }: { currentTotal: number; disabled?: boolean }) {
+type GoalFormValues = z.infer<typeof goalSchema>;
+
+export default function GoalForm({
+  currentTotal,
+  disabled = false,
+}: {
+  currentTotal: number;
+  disabled?: boolean;
+}) {
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<GoalFormValues>({
     resolver: zodResolver(goalSchema),
-    defaultValues: { uomType: 'NUMERIC_MIN', weightage: 10 },
+    defaultValues: {
+      thrustArea: '',
+      title: '',
+      description: '',
+      uomType: 'NUMERIC_MIN',
+      targetValue: '',
+      weightage: 10,
+    },
   });
 
-  async function onSubmit(data: any) {
-    const res = await fetch('/api/goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  async function onSubmit(data: GoalFormValues) {
+    const res = await fetch('/api/goals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
     const json = await res.json();
-    if (!res.ok) alert(json.error || 'Failed');
-    else { reset({ uomType: 'NUMERIC_MIN', weightage: 10 }); router.refresh(); }
+
+    if (!res.ok) {
+      alert(json.error || 'Failed');
+      return;
+    }
+
+    reset({
+      thrustArea: '',
+      title: '',
+      description: '',
+      uomType: 'NUMERIC_MIN',
+      targetValue: '',
+      weightage: 10,
+    });
+
+    router.refresh();
   }
 
   return (
@@ -33,14 +74,25 @@ export default function GoalForm({ currentTotal, disabled = false }: { currentTo
           <option value="People Development">People Development</option>
         </select>
       </div>
+
       <div>
         <label className="label">Goal Title</label>
-        <input className="input" placeholder="Example: Improve quarterly CSAT" {...register('title')} />
+        <input
+          className="input"
+          placeholder="Example: Improve quarterly CSAT"
+          {...register('title')}
+        />
       </div>
+
       <div>
         <label className="label">Description</label>
-        <textarea className="input min-h-24 resize-none" placeholder="Add measurable goal description" {...register('description')} />
+        <textarea
+          className="input min-h-24 resize-none"
+          placeholder="Add measurable goal description"
+          {...register('description')}
+        />
       </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="label">UoM Type</label>
@@ -52,20 +104,54 @@ export default function GoalForm({ currentTotal, disabled = false }: { currentTo
             <option value="ZERO_BASED">Zero-based</option>
           </select>
         </div>
+
         <div>
           <label className="label">Target</label>
-          <input className="input" placeholder="100 / 90% / 2026-03-31" {...register('targetValue')} />
+          <input
+            className="input"
+            placeholder="100 / 90% / 2026-03-31"
+            {...register('targetValue')}
+          />
         </div>
       </div>
+
       <div>
         <label className="label">Weightage</label>
-        <input className="input" type="number" min={10} max={100} placeholder="Minimum 10" {...register('weightage')} />
-        <p className="mt-2 text-xs font-semibold text-slate-500">Current total before this goal: {currentTotal}%</p>
+        <input
+          className="input"
+          type="number"
+          min={10}
+          max={100}
+          placeholder="Minimum 10"
+          {...register('weightage', { valueAsNumber: true })}
+        />
+        <p className="mt-2 text-xs font-semibold text-slate-500">
+          Current total before this goal: {currentTotal}%
+        </p>
       </div>
-      {Object.values(errors).length > 0 && <div className="rounded-2xl bg-rose-50 p-4">{Object.values(errors).map((e: any, i) => <p className="text-xs font-semibold text-rose-700" key={i}>{e.message}</p>)}</div>}
-      {disabled && <div className="rounded-2xl bg-slate-50 p-4 text-xs font-semibold text-slate-500">Approved locked goal sheets cannot be edited. Ask Admin to unlock.</div>}
-      <button disabled={isSubmitting || disabled} className="btn-primary w-full py-3 disabled:cursor-not-allowed disabled:opacity-50">
-        {isSubmitting ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />} Save Draft
+
+      {Object.values(errors).length > 0 && (
+        <div className="rounded-2xl bg-rose-50 p-4">
+          {Object.values(errors).map((e, i) => (
+            <p className="text-xs font-semibold text-rose-700" key={i}>
+              {e?.message}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {disabled && (
+        <div className="rounded-2xl bg-slate-50 p-4 text-xs font-semibold text-slate-500">
+          Approved locked goal sheets cannot be edited. Ask Admin to unlock.
+        </div>
+      )}
+
+      <button
+        disabled={isSubmitting || disabled}
+        className="btn-primary w-full py-3 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {isSubmitting ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />}
+        Save Draft
       </button>
     </form>
   );
