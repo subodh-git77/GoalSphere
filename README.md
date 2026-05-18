@@ -175,7 +175,7 @@ goalsphere/
 └── README.md
 ```
 
-## Hackathon Demo Flow
+## GoalSphere Demo Flow
 
 1. Login as Employee.
 2. Create goals and show validation rules.
@@ -185,32 +185,3 @@ goalsphere/
 6. Login as Admin.
 7. Show audit trail, escalation engine, and export reports.
 
-## Deployment
-
-### Vercel
-
-1. Push code to GitHub.
-2. Import project in Vercel.
-3. Add environment variables.
-4. Use Supabase/Railway PostgreSQL connection string in `DATABASE_URL`.
-5. Run Prisma migration from local or CI.
-
-### Railway / Render
-
-Use the included Dockerfile and configure:
-
-```txt
-DATABASE_URL
-NEXTAUTH_SECRET
-NEXTAUTH_URL
-```
-
-## Notes
-
-- Microsoft Entra ID and Teams integrations are architected as extension points. The current implementation includes the complete authentication and notification foundation needed to add them quickly.
-- Email architecture environment variables are included; production SMTP can be connected using Nodemailer.
-
-
-## Stability & Performance Hardening
-
-This delivery includes a hardened build with optimized scoped queries, Prisma indexes, improved Employee goal submission, inline Manager approvals, Admin user management, locked-goal unlock, safer check-ins, and scoped report exports. See `PERFORMANCE_AND_FLOW_FIXES.md` for details.
