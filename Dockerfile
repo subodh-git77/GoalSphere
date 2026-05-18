@@ -1,14 +1,11 @@
-FROM node:20-alpine AS deps
+FROM node:20 AS deps
 
 WORKDIR /app
-
-# Required for Prisma on Alpine
-RUN apk add --no-cache openssl
 
 # Copy package files
 COPY package*.json ./
 
-# Copy prisma schema BEFORE npm install
+# Copy prisma schema before install
 COPY prisma ./prisma
 
 # Install dependencies
@@ -16,21 +13,24 @@ RUN npm install
 
 # ----------------------------
 
-FROM node:20-alpine AS builder
+FROM node:20 AS builder
 
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy application
+# Copy app source
 COPY . .
 
-# Generate prisma client + build app
-RUN npx prisma generate && npm run build
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build Next.js app
+RUN npm run build
 
 # ----------------------------
 
-FROM node:20-alpine AS runner
+FROM node:20 AS runner
 
 WORKDIR /app
 
@@ -38,6 +38,6 @@ ENV NODE_ENV=production
 
 COPY --from=builder /app .
 
-EXPOSE 3000
+EXPOSE 10000
 
 CMD ["npm", "start"]
